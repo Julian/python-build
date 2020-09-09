@@ -171,11 +171,11 @@ def test_build(mocker, test_flit_path):
     builder.hook.build_wheel.side_effect = [None, Exception]
 
     builder.build('sdist', '.')
-    builder.hook.build_sdist.assert_called_with('.', {})
+    builder.hook.build_sdist.assert_called_with(os.path.realpath('.'), {})
     build._working_directory.assert_called_with(test_flit_path)
 
     builder.build('wheel', '.')
-    builder.hook.build_wheel.assert_called_with('.', {})
+    builder.hook.build_wheel.assert_called_with(os.path.realpath('.'), {})
     build._working_directory.assert_called_with(test_flit_path)
 
     with pytest.raises(build.BuildBackendException):
@@ -231,6 +231,17 @@ def test_missing_outdir(mocker, tmp_dir, test_flit_path):
     builder.build('sdist', out)
 
     assert os.path.isdir(out)
+
+
+def test_relative_outdir(mocker, tmp_dir, test_flit_path):
+    mocker.patch('importlib.import_module', autospec=True)
+    mocker.patch('pep517.wrappers.Pep517HookCaller', autospec=True)
+
+    builder = build.ProjectBuilder(test_flit_path)
+
+    builder.build('sdist', '.')
+
+    builder.hook.build_sdist.assert_called_with(os.path.realpath('.'), {})
 
 
 def test_not_dir_outdir(mocker, tmp_dir, test_flit_path):
